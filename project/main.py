@@ -31,7 +31,7 @@ def main():
     except IndexError:
         print "Login sul sito\n"
 
-    browser = BrowserBot(usr, passwd, saved)    
+    browser = BrowserBot(usr, passwd, saved)
 
     browser = timeout_login(browser)
 

@@ -1,14 +1,14 @@
-LessonDownloader ENG
+# LessonDownloader ENG
 
 Useful tool to download video lessons from Polito website automatically(example download chemistry video lessons from lesson 1 to 30)
 
-#alpha version
+## alpha version
 working only with linux and chrome
 
-#Dependencies
+## Dependencies
 python 2.7
 
-#How to use
+##How to use
 from shell run:
 	python main.py
 for normal execution
@@ -18,17 +18,17 @@ for execution with stored credential in local
 
 credential will be generated in a read-only, user owner, json file
  
-#LessonDonwloader ITA
+# LessonDonwloader ITA
  
 Applicazione di utilità per scaricare comodamente le videolezioni
 
-#versione alpha
+## versione alpha
 funziona solo con linux e chrome
 
-#Dipendenze
+## Dipendenze
 almeno python 2.7
 
-#Modalità d'uso
+## Modalità d'uso
 Da shell lanciare:
 	python main.py
 per una normale esecuzione
