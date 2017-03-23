@@ -128,24 +128,32 @@ class BrowserBot:
         self.driver.get('https://didattica.polito.it/pls/portal30/sviluppo.pagina_corso.main?t=3')
         self.secure_find_element_by_class('videoLezLink').click()
 
-        lesson_titles = self.secure_find_elements_by_class('argoLink')
-        l_t = list(map(lambda lt: lt.get_attribute('text').replace('.', ''), lesson_titles))
+        lesson_titles = self.secure_find_elements_by_class('argomentiEspansi')
+        l_t = []
+        for lesson_title in lesson_titles:
+            tot_description = ''
+            for description in lesson_title.find_elements_by_class_name("argoLink"):
+                tot_description += '-' + description.get_attribute('text').replace('.', '')
+            l_t.append(tot_description)
+
         lessons = self.driver.find_elements_by_css_selector("#navbar_left_menu .h5 a")
         lessons_link = list(map(lambda l: l.get_attribute('href'), lessons))
         if not os.path.exists(course.name):
                 os.mkdir(course.name)
-        for i in range(start, end+1):
-            self.driver.get(lessons_link[i-1])
-            url = self.driver.find_element_by_link_text('Video').get_attribute('href')
-            # self.driver.get(url)
-            print url
-            temp_name = 'Lezione ' if i >= 10 else 'Lezione 0'
-            self.download_lesson(
-                temp_name + str(i) + '-' + l_t[i-1].replace('/', '\\') + '.mp4',
-                self.driver.find_element_by_link_text('Video').get_attribute('href'),
-                self.driver.get_cookies(),
-                data_root=course.name
-            )
+
+        try:
+            for i in range(start, end+1):
+                self.driver.get(lessons_link[i-1])
+                url = self.driver.find_element_by_link_text('Video').get_attribute('href')
+                temp_name = 'Lezione ' if i >= 10 else 'Lezione 0'
+                self.download_lesson(
+                    temp_name + str(i) + '-' + l_t[i-1].replace('/', '\\') + '.mp4',
+                    self.driver.find_element_by_link_text('Video').get_attribute('href'),
+                    self.driver.get_cookies(),
+                    data_root=course.name
+                )
+        except IndexError:
+            print "Tutte le lezioni sono state scaricate"
         return
 
     @staticmethod

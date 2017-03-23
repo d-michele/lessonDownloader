@@ -5,6 +5,7 @@ import sys
 import os
 import getpass
 
+
 def main():
     usr = None
     passwd = None
@@ -30,7 +31,7 @@ def main():
     except IndexError:
         print "Login sul sito\n"
 
-    browser = BrowserBot(usr, passwd, saved)
+    browser = BrowserBot(usr, passwd, saved)    
 
     browser = timeout_login(browser)
 
