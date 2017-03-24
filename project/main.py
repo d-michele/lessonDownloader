@@ -18,7 +18,6 @@ def main():
                 raw_user = raw_input('inserire username\n')
                 print 'inserire password\n'
                 raw_password = getpass.getpass()
-                print raw_password
                 try:
                     usr = str(raw_user)
                     passwd = str(raw_password)
