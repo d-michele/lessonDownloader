@@ -4,7 +4,7 @@ Useful tool to download video lessons from Polito website automatically(example 
 
 ## alpha version
 working only with linux and chrome
-terminal
+
 ## Installing Dependencies
     pip install -r requirements.txt
 ## How to use
