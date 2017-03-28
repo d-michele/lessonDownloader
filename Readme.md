@@ -25,7 +25,7 @@ Applicazione di utilità per scaricare comodamente le videolezioni
 funziona solo con linux e chrome
 
 ## Installare dipendenze
-almeno python 2.7
+    pip install -r requirements.txt
 
 ## Modalità d'uso
 Da shell lanciare:
