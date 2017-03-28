@@ -45,13 +45,18 @@ def lesson_menu(browser):
     print ("0 - Esci")
 
     while True:
-        choose = raw_input("Scegliere il numero della materia da cui scaricare le lezioni ")
-        start = raw_input("vuoi scaricare lezioni dalla ")
-        end = raw_input("alla ")
         try:
+            choose = raw_input("Scegliere il numero della materia da cui scaricare le lezioni ")
             choose = int(choose)
+            if choose == 0:
+                sys.exit(0)
+            start = raw_input("vuoi scaricare lezioni dalla ")
             start = int(start)
+            end = raw_input("alla ")
             end = int(end)
+            if start < 1 or end < 1:
+                raise ValueError
+
             browser.get_lessons_from_course(subjects[choose-1], start, end)
             break
         except ValueError:
