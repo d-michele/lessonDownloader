@@ -9,10 +9,10 @@ terminal
     pip install -r requirements.txt
 ## How to use
 from shell run:
-	python main.py
+	```python main.py```
 for normal execution
 or :
-	phython main.py -s
+	```phython main.py -s```
 for execution with stored credential in local
 
 credential will be generated in a read-only, user owner, json file
