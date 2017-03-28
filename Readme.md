@@ -5,9 +5,8 @@ Useful tool to download video lessons from Polito website automatically(example 
 ## alpha version
 working only with linux and chrome
 
-## Dependencies
-python 2.7
-
+## Installing Dependencies
+    pip install -r requirements.txt
 ##How to use
 from shell run:
 	python main.py
@@ -25,7 +24,7 @@ Applicazione di utilità per scaricare comodamente le videolezioni
 ## versione alpha
 funziona solo con linux e chrome
 
-## Dipendenze
+## Installare dipendenze
 almeno python 2.7
 
 ## Modalità d'uso
