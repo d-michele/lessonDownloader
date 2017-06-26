@@ -15,15 +15,20 @@ from stat import S_IREAD
 
 
 class BrowserBot:
+    ELEARNING_WEBSITE = "elearning.polito.it"
+    DIDATTICA_WEBSITE = "didattica.polito.it"
     LOAD_TIMEOUT = 20
     subjects = []
     last_percent_reported = None
+
+
 
     def __init__(self, user, password, saved=False):
         # ToDo for now only implemented with chrome but constructor need the browser
         self.driver = webdriver.Chrome('./chromedriver_win.exe')
         self.driver.set_page_load_timeout(self.LOAD_TIMEOUT)
         self.saved = saved
+        self.current_course = None
         if self.saved and os.path.exists('config.json'):
             self.retrieve_user()
         elif self.saved and user and password:
@@ -31,6 +36,14 @@ class BrowserBot:
         else:
             self.user = None
             self.password = None
+
+    @property
+    def current_course(self):
+        return current_course
+
+    @current_course.setter
+    def set_current_course(course):
+        current_course = course
 
     def create_user(self, user, password, config_name='config.json'):
         user_credential = {'user': user, 'password': password}
@@ -122,11 +135,42 @@ class BrowserBot:
 
         return self.subjects
 
-    def get_lessons_from_course(self, course, start, end):
+    def get_lessons_from_course(self, course):
         self.driver.get(course.href)
         self.driver.get('https://didattica.polito.it/pls/portal30/sviluppo.pagina_corso.main?t=3')
         self.secure_find_element_by_class('videoLezLink').click()
+        
 
+        self.download_didattica_lesson()
+
+        return
+
+    def is_valid_course_lessons_url(self):
+        videolessons_url = self.driver.current_url
+        videolessons_url_splitted = videolessons_url.split("/")
+        url_domain = videolessons_url_splitted[2]
+        portal_route = videolessons_url_splitted[6].split("?")
+        portal = portal_route[0]
+
+        return url_domain == self.DIDATTICA_WEBSITE and portal == "sviluppo.videolezioni.vis"
+
+    def get_course_from_current_url(self):
+        print "vedo se valid course"
+        if self.is_valid_course_lessons_url():
+            print "e' valid course"
+            course_name = self.secure_find_element_by_class('text-primary').get_attribute('innerText')
+            print "prendo course_name"
+            print course_name
+            if course_name is not None:
+                print "istanzio current_course"
+                
+                course = Course(course_name)
+                course.name
+                return course
+        
+        return None
+
+    def download_didattica_lesson(self, course):
         lesson_titles = self.secure_find_elements_by_class('argomentiEspansi')
         l_t = []
         for lesson_title in lesson_titles:
@@ -141,7 +185,7 @@ class BrowserBot:
                 os.mkdir(course.name)
 
         try:
-            for i in range(start, end+1):
+            for i in range(course.start_download, course.end_download+1):
                 self.driver.get(lessons_link[i-1])
                 url = self.driver.find_element_by_link_text('Video').get_attribute('href')
                 temp_name = 'Lezione ' if i >= 10 else 'Lezione 0'
