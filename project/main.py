@@ -38,10 +38,10 @@ def main():
 
 
 def lesson_menu(browser):
-    subjects = browser.get_subject()
+    subjects_courses = browser.get_subject_courses()
 
-    for i in range(1, len(subjects)):
-        print("{} - {}".format(i, subjects[i-1]))
+    for i in range(1, len(subjects_courses)):
+        print("{} - {}".format(i, subjects_courses[i-1]))
     custom_lesson_choose = i+1
     print ("{} scarica lezioni di una qualsiasi materia".format(custom_lesson_choose))
     print ("0 - Esci")
@@ -57,16 +57,17 @@ def lesson_menu(browser):
             if choose == custom_lesson_choose:
                 custom_lesson_download(browser)
             else:
-                chosed_lesson = subjects[choose-1]
-                define_download_range(chosed_lesson)
-
-                browser.get_lessons_from_course(chosed_lesson)
+                chosen_lesson_course = subjects_courses[choose-1]
+                define_download_range(chosen_lesson_course)
+                browser.get_lessons_from_course(chosen_lesson_course)
+                download_lessons(browser, chosen_lesson_course)
                 break
         except IndexError:
             print ("Materia non esistente")
         except ValueError:
             print ("Scelta non valida")
     return
+
 
 def custom_lesson_download(browser):
     while True:
@@ -76,9 +77,10 @@ def custom_lesson_download(browser):
             break
 
     define_download_range(selected_course)
-    browser.download_didattica_lesson(selected_course)
-    
+    download_lessons(browser, selected_course)
+
     return
+
 
 def define_download_range(course):
     try:
@@ -94,6 +96,14 @@ def define_download_range(course):
 
     return
 
+
+def download_lessons(browser, selected_course):
+    if selected_course.lessons_website == Course.DIDATTICA_WEBSITE:
+        browser.download_didattica_lessons(selected_course)
+    elif selected_course.lessons_website == Course.ELEARNING_WEBSITE:
+        browser.download_elearning_lessons(selected_course)
+
+
 def timeout_login(browser):
     i = 0
     while True:
@@ -105,6 +115,7 @@ def timeout_login(browser):
                 sys.exit(1)
             i += 1
     return browser
+
 
 if __name__ == '__main__':
     main()

@@ -15,8 +15,6 @@ from stat import S_IREAD
 
 
 class BrowserBot:
-    ELEARNING_WEBSITE = "elearning.polito.it"
-    DIDATTICA_WEBSITE = "didattica.polito.it"
     LOAD_TIMEOUT = 20
     subjects = []
     last_percent_reported = None
@@ -39,7 +37,7 @@ class BrowserBot:
 
     @property
     def current_course(self):
-        return current_course
+        return self.current_course
 
     @current_course.setter
     def set_current_course(course):
@@ -123,13 +121,13 @@ class BrowserBot:
         self.driver.get('https://login.didattica.polito.it/secure/ShibLogin.php')
         return
 
-    def get_subject(self):
+    def get_subject_courses(self):
         try:
             subjects_web_elements = self.secure_find_elements_by_class('policorpolink')
 
             for subject_web in subjects_web_elements:
                 if subject_web.get_attribute('href').find('sviluppo.chiama') != -1:
-                    self.subjects.append(Course(subject_web.text, subject_web.get_attribute('href')))
+                    self.subjects.append(Course(subject_web.text, href=subject_web.get_attribute('href')))
         except NoSuchElementException as noElExc:
             print"Connection error"
 
@@ -139,38 +137,53 @@ class BrowserBot:
         self.driver.get(course.href)
         self.driver.get('https://didattica.polito.it/pls/portal30/sviluppo.pagina_corso.main?t=3')
         self.secure_find_element_by_class('videoLezLink').click()
-        
-
-        self.download_didattica_lesson()
 
         return
 
-    def is_valid_course_lessons_url(self):
+    def is_valid_didattica_lessons_url(self):
+        is_valid = False
         videolessons_url = self.driver.current_url
         videolessons_url_splitted = videolessons_url.split("/")
         url_domain = videolessons_url_splitted[2]
-        portal_route = videolessons_url_splitted[6].split("?")
-        portal = portal_route[0]
+        if url_domain == Course.DIDATTICA_WEBSITE:
+            portal_route = videolessons_url_splitted[6].split("?")
+            portal = portal_route[0]
+            is_valid = (portal == "sviluppo.videolezioni.vis")
 
-        return url_domain == self.DIDATTICA_WEBSITE and portal == "sviluppo.videolezioni.vis"
+        return is_valid
+
+    def is_valid_elearning_lesson_url(self):
+        is_valid = False
+        videolessons_url = self.driver.current_url
+        videolessons_url_splitted = videolessons_url.split("/")
+        url_domain = videolessons_url_splitted[2]
+        if url_domain == Course.ELEARNING_WEBSITE:
+            portal_route = videolessons_url_splitted[5].split("?")
+            page = portal_route[0]
+            is_valid = (page == "lp_controller.php")
+
+        return is_valid
+        """//https://elearning.polito.it/main/newscorm/lp_controller.php?cidReq=2018_01OTWOV_0218961&action=view&lp_id=1&isStudentView=true
+        return url_domain == self.ELEARNING_WEBSITE and page == "lp_controller.php"
+        """
+
 
     def get_course_from_current_url(self):
         print "vedo se valid course"
-        if self.is_valid_course_lessons_url():
-            print "e' valid course"
+        course = None
+        if self.is_valid_didattica_lessons_url():
             course_name = self.secure_find_element_by_class('text-primary').get_attribute('innerText')
-            print "prendo course_name"
-            print course_name
             if course_name is not None:
                 print "istanzio current_course"
-                
-                course = Course(course_name)
-                course.name
-                return course
-        
-        return None
+                course = Course(course_name,"didattica")
+        elif self.is_valid_elearning_lesson_url():
+            course_name = self.secure_find_element_by_id('learning_path_right_zone').find_element_by_xpath('.//h2').text
+            if course_name is not None:
+                print "istanzio current_course"
+                course = Course(course_name,"elearning");
+        return course
 
-    def download_didattica_lesson(self, course):
+    def download_didattica_lessons(self, course):
         lesson_titles = self.secure_find_elements_by_class('argomentiEspansi')
         l_t = []
         for lesson_title in lesson_titles:
@@ -197,6 +210,11 @@ class BrowserBot:
                 )
         except IndexError:
             print "Tutte le lezioni sono state scaricate"
+        return
+
+    """ToDo"""
+    def download_elearning_lessons(self, course):
+        pass
         return
 
     @staticmethod
