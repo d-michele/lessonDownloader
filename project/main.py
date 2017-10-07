@@ -57,16 +57,21 @@ def lesson_menu(browser):
             if choose == custom_lesson_choose:
                 custom_lesson_download(browser)
             else:
-                chosen_lesson_course = subjects_courses[choose-1]
-                define_download_range(chosen_lesson_course)
-                browser.get_lessons_from_course(chosen_lesson_course)
-                download_lessons(browser, chosen_lesson_course)
+                selected_lesson_download(browser, subjects_courses[choose-1])
                 break
         except IndexError:
+            browser.get('https://didattica.polito.it/portal/page/portal/home/Studente')
             print ("Materia non esistente")
         except ValueError:
             print ("Scelta non valida")
     return
+
+
+def selected_lesson_download(browser, selected_course):
+    define_download_range(selected_course)
+    browser.get_lessons_page_from_course(selected_course)
+    selected_course.lessons_website = browser.lessons_website_from_current_url()
+    download_lessons(browser, selected_course)
 
 
 def custom_lesson_download(browser):

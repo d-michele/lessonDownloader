@@ -15,11 +15,10 @@ from stat import S_IREAD
 
 
 class BrowserBot:
+    download_website = ""
     LOAD_TIMEOUT = 20
     subjects = []
     last_percent_reported = None
-
-
 
     def __init__(self, user, password, saved=False):
         # ToDo for now only implemented with chrome but constructor need the browser
@@ -133,10 +132,11 @@ class BrowserBot:
 
         return self.subjects
 
-    def get_lessons_from_course(self, course):
+    def get_lessons_page_from_course(self, course):
         self.driver.get(course.href)
         self.driver.get('https://didattica.polito.it/pls/portal30/sviluppo.pagina_corso.main?t=3')
-        self.secure_find_element_by_class('videoLezLink').click()
+        videolesson_url = self.secure_find_elements_by_class('videoLezLink')
+        self.driver.get(videolesson_url[len(videolesson_url)-1].get_attribute('href'))
 
         return
 
@@ -146,7 +146,7 @@ class BrowserBot:
         videolessons_url_splitted = videolessons_url.split("/")
         url_domain = videolessons_url_splitted[2]
         if url_domain == Course.DIDATTICA_WEBSITE:
-            portal_route = videolessons_url_splitted[6].split("?")
+            portal_route = videolessons_url_splitted[5].split("?")
             portal = portal_route[0]
             is_valid = (portal == "sviluppo.videolezioni.vis")
 
@@ -160,61 +160,83 @@ class BrowserBot:
         if url_domain == Course.ELEARNING_WEBSITE:
             portal_route = videolessons_url_splitted[5].split("?")
             page = portal_route[0]
-            is_valid = (page == "lp_controller.php")
+            is_valid = (page == "index.php")
 
         return is_valid
         """//https://elearning.polito.it/main/newscorm/lp_controller.php?cidReq=2018_01OTWOV_0218961&action=view&lp_id=1&isStudentView=true
         return url_domain == self.ELEARNING_WEBSITE and page == "lp_controller.php"
         """
 
-
     def get_course_from_current_url(self):
-        print "vedo se valid course"
         course = None
         if self.is_valid_didattica_lessons_url():
             course_name = self.secure_find_element_by_class('text-primary').get_attribute('innerText')
             if course_name is not None:
-                print "istanzio current_course"
-                course = Course(course_name,"didattica")
+                course = Course(course_name, Course.DIDATTICA_WEBSITE)
         elif self.is_valid_elearning_lesson_url():
             course_name = self.secure_find_element_by_id('learning_path_right_zone').find_element_by_xpath('.//h2').text
             if course_name is not None:
-                print "istanzio current_course"
-                course = Course(course_name,"elearning");
+                course = Course(course_name, Course.ELEARNING_WEBSITE);
         return course
 
+    def lessons_website_from_current_url(self):
+        website = ''
+        if self.is_valid_didattica_lessons_url():
+            website = Course.DIDATTICA_WEBSITE
+        elif self.is_valid_elearning_lesson_url():
+            website = Course.ELEARNING_WEBSITE
+        return website
+
     def download_didattica_lessons(self, course):
-        lesson_titles = self.secure_find_elements_by_class('argomentiEspansi')
-        l_t = []
-        for lesson_title in lesson_titles:
-            tot_description = ''
-            for description in lesson_title.find_elements_by_class_name("argoLink"):
-                tot_description += '-' + description.get_attribute('text').replace('.', '')
-            l_t.append(tot_description)
+        lessons_arguments_web_elements = self.secure_find_elements_by_class('argomentiEspansi')
+        lessons_arguments = []
+        """Take arguments of lesson from class, concatenate them to put in the title when lesson is downloaded"""
+        for lesson_arguments_web_element in lessons_arguments_web_elements:
+            lessons_arguments.append(lesson_arguments_web_element.text.replace('.', '').replace('\n', ''))
 
         lessons = self.driver.find_elements_by_css_selector("#navbar_left_menu .h5 a")
-        lessons_link = list(map(lambda l: l.get_attribute('href'), lessons))
-        if not os.path.exists(course.name):
-                os.mkdir(course.name)
+        lessons_links = list(map(lambda l: l.get_attribute('href'), lessons))
+        self.download_lessons_with_arguments_and_links(course, lessons_links, lessons_arguments)
+        return
 
+    def download_elearning_lessons(self, course):
+        lessons_arguments = []
+        lessons_data = self.secure_find_elements_by_class('lezioni')[1]
+        lessons_arguments_web_elements = lessons_data.find_elements_by_xpath('//ul/ul')
+        lessons_links_web_elements = lessons_data.find_elements_by_xpath('.//li/a')
+        lessons_links = list(map(lambda l: l.get_attribute('href'), lessons_links_web_elements))
+        for i in range(course.start_download-1, course.end_download):
+            lessons_arguments.append(self.concat_lesson_arguments(
+                lessons_arguments_web_elements[i].find_elements_by_xpath('.//li')))
+        self.download_lessons_with_arguments_and_links(course, lessons_links, lessons_arguments)
+
+        return
+
+    @staticmethod
+    def concat_lesson_arguments(lesson_arguments_web_element):
+        concat_arguments = ''
+        for description in lesson_arguments_web_element:
+            concat_arguments += '-' + description.text.replace('.', '')
+        return concat_arguments
+
+    def download_lessons_with_arguments_and_links(self, course, lessons_links, lessons_arguments):
+        if not os.path.exists(course.name):
+            os.mkdir(course.name)
         try:
-            for i in range(course.start_download, course.end_download+1):
-                self.driver.get(lessons_link[i-1])
-                url = self.driver.find_element_by_link_text('Video').get_attribute('href')
+            for i in range(course.start_download, course.end_download + 1):
+                self.driver.get(lessons_links[i - 1])
                 temp_name = 'Lezione ' if i >= 10 else 'Lezione 0'
+                filename = temp_name + str(i) + '-' + lessons_arguments[i - 1].replace('/', '\\') + '.mp4'
+                url = self.driver.find_element_by_link_text('Video').get_attribute('href')
+                cookies = self.driver.get_cookies()
                 self.download_lesson(
-                    temp_name + str(i) + '-' + l_t[i-1].replace('/', '\\') + '.mp4',
-                    self.driver.find_element_by_link_text('Video').get_attribute('href'),
-                    self.driver.get_cookies(),
+                    filename,
+                    url,
+                    cookies,
                     data_root=course.name
                 )
         except IndexError:
             print "Tutte le lezioni sono state scaricate"
-        return
-
-    """ToDo"""
-    def download_elearning_lessons(self, course):
-        pass
         return
 
     @staticmethod
