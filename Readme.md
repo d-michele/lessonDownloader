@@ -22,7 +22,7 @@ credential will be generated in a read-only, user owner, json file
 Applicazione di utilità per scaricare comodamente le videolezioni
 
 ## versione alpha
-funziona solo con linux e chrome
+funziona solo con chrome
 
 ## Installare dipendenze
     pip install -r requirements.txt
