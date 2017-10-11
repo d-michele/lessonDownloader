@@ -10,12 +10,6 @@ working only with Windows and chrome
 ## How to use
 from shell run:
 	```python main.py```
-for normal execution
-or :
-	```phython main.py -s```
-for execution with stored credential in local
-
-credential will be generated in a read-only, user owner, json file
  
 # LessonDonwloader ITA
  
@@ -30,9 +24,3 @@ funziona solo con chrome
 ## Modalità d'uso
 Da shell lanciare:
     ```python main.py```
-per una normale esecuzione
-altrimenti:
-   ```python main.py -s```
-per eseguirlo con memorizzazione di credenziali in locale
-
-le credenziali sarrano memorizzate in un file json con permessi di lettura solo per l'utente proprietario
