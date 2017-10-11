@@ -1,9 +1,10 @@
+## For version with windows chrome driver check master_windows
 # LessonDownloader ENG
 
 Useful tool to download video lessons from Polito website automatically(example download chemistry video lessons from lesson 1 to 30)
 
 ## alpha version
-working only with linux and chrome
+working only with Windows and chrome
 
 ## Installing Dependencies
     pip install -r requirements.txt
@@ -16,13 +17,13 @@ or :
 for execution with stored credential in local
 
 credential will be generated in a read-only, user owner, json file
- 
+
 # LessonDonwloader ITA
- 
+
 Applicazione di utilità per scaricare comodamente le videolezioni
 
 ## versione alpha
-funziona solo con linux e chrome
+funziona solo linux e chrome
 
 ## Installare dipendenze
     pip install -r requirements.txt
