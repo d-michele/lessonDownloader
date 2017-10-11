@@ -163,9 +163,6 @@ class BrowserBot:
             is_valid = (page == "index.php")
 
         return is_valid
-        """//https://elearning.polito.it/main/newscorm/lp_controller.php?cidReq=2018_01OTWOV_0218961&action=view&lp_id=1&isStudentView=true
-        return url_domain == self.ELEARNING_WEBSITE and page == "lp_controller.php"
-        """
 
     def get_course_from_current_url(self):
         course = None
