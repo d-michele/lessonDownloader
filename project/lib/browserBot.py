@@ -21,7 +21,6 @@ class BrowserBot:
     last_percent_reported = None
 
     def __init__(self, user, password, saved=False):
-        # ToDo for now only implemented with chrome but constructor need the browser
         self.driver = webdriver.Chrome('./chromedriver_win.exe')
         self.driver.set_page_load_timeout(self.LOAD_TIMEOUT)
         self.saved = saved
