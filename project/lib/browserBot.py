@@ -1,3 +1,4 @@
+import selenium
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -38,7 +39,7 @@ class BrowserBot:
         return self.current_course
 
     @current_course.setter
-    def set_current_course(course):
+    def set_current_course(self, course):
         current_course = course
 
     def create_user(self, user, password, config_name='config.json'):
@@ -157,9 +158,10 @@ class BrowserBot:
         videolessons_url_splitted = videolessons_url.split("/")
         url_domain = videolessons_url_splitted[2]
         if url_domain == Course.ELEARNING_WEBSITE:
-            portal_route = videolessons_url_splitted[5].split("?")
-            page = portal_route[0]
-            is_valid = (page == "index.php")
+            # portal_route = videolessons_url_splitted[5].split("?")
+            # page = portal_route[0]
+            # is_valid = (page == "index.php")
+            is_valid = 1
 
         return is_valid
 
@@ -170,9 +172,12 @@ class BrowserBot:
             if course_name is not None:
                 course = Course(course_name, Course.DIDATTICA_WEBSITE)
         elif self.is_valid_elearning_lesson_url():
-            course_name = self.driver.find_element_by_xpath('//*[@id="videoContainer"]/h2[1]').text
+            try:
+                course_name = self.driver.find_element_by_xpath('//*[@id="videoContainer"]/h2[1]').text
+            except selenium.common.exceptions.NoSuchElementException:
+                course_name = self.driver.find_element_by_xpath('//*[@id="rightZone"]/h2[1]').text
             if course_name is not None:
-                course = Course(course_name, Course.ELEARNING_WEBSITE);
+                course = Course(course_name, Course.ELEARNING_WEBSITE)
         return course
 
     def lessons_website_from_current_url(self):
@@ -197,15 +202,55 @@ class BrowserBot:
 
     def download_elearning_lessons(self, course):
         lessons_arguments = []
-        lessons_data = self.secure_find_elements_by_class('lezioni')[1]
-        lessons_arguments_web_elements = lessons_data.find_elements_by_xpath('//ul/ul')
-        lessons_links_web_elements = lessons_data.find_elements_by_xpath('.//li/a')
-        lessons_links = list(map(lambda l: l.get_attribute('href'), lessons_links_web_elements))
-        if course.end_download > len(lessons_links): course.end_download = len(lessons_links)
-        for i in range(course.start_download-1, course.end_download):
-            lessons_arguments.append(self.concat_lesson_arguments(
-                lessons_arguments_web_elements[i].find_elements_by_xpath('.//li')))
-        self.download_lessons_with_arguments_and_links(course, lessons_links, lessons_arguments)
+        lessons_data = self.secure_find_elements_by_class('lezioni')
+        # some elearning page are different from other
+        if len(lessons_data) == 2:
+            lessons_data = lessons_data[1]
+            lessons_arguments_web_elements = lessons_data.find_elements_by_xpath('//ul/ul')
+            lessons_links_web_elements = lessons_data.find_elements_by_xpath('.//li/a')
+            lessons_links = list(map(lambda l: l.get_attribute('href'), lessons_links_web_elements))
+            if course.end_download > len(lessons_links): course.end_download = len(lessons_links)
+            for i in range(course.start_download-1, course.end_download):
+                lessons_arguments.append(self.concat_lesson_arguments(
+                    lessons_arguments_web_elements[i].find_elements_by_xpath('.//li')))
+            self.download_lessons_with_arguments_and_links(course, lessons_links, lessons_arguments)
+
+        elif len(lessons_data) == 1:
+            lessons_arguments_web_elements = self.secure_find_elements_by_class('argoLink')
+            lessons_links_web_elements = [item for item in lessons_data[0].find_elements_by_xpath('//ul/li/a')
+                                          if item not in lessons_arguments_web_elements]
+            lessons_links = list(map(lambda l: l.get_attribute('href'), lessons_links_web_elements))
+            # prev_j = int(lessons_arguments_web_elements[0].find_element_by_xpath('..').get_attribute("id").replace("argEspansi", ""))
+            append_arguments = []
+
+            end = len(lessons_arguments_web_elements)
+            for i in range(start, len(lessons_arguments_web_elements)):
+                j = int(lessons_arguments_web_elements[i].find_element_by_xpath('..').get_attribute("id").replace("argEspansi", ""))
+                if course.end_download == j:
+                    end = i
+                    break
+
+            prev_j = int(lessons_arguments_web_elements[0].find_element_by_xpath('..').get_attribute("id").replace("argEspansi", ""))
+            for i in range(0, end):
+                j = int(lessons_arguments_web_elements[i].find_element_by_xpath('..').get_attribute("id").replace("argEspansi", ""))
+                if j == prev_j:
+                    append_arguments.append(lessons_arguments_web_elements[i])
+                else:
+                    lessons_arguments.append(self.concat_lesson_arguments(append_arguments))
+                    prev_j = j;
+                    append_arguments = []
+                    append_arguments.append(lessons_arguments_web_elements[i])
+
+        # append last lesson
+            course.end_download = prev_j
+            if end == len(lessons_arguments_web_elements):
+                lessons_arguments.append(self.concat_lesson_arguments(append_arguments))
+            self.download_lessons_with_arguments_and_links(course, lessons_links, lessons_arguments)
+        else:
+            raise Exception(
+                'Videolezione non supportata')
+
+
 
         return
 
