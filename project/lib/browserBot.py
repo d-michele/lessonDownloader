@@ -224,11 +224,10 @@ class BrowserBot:
             append_arguments = []
 
             end = len(lessons_arguments_web_elements)
-            for i in range(start, len(lessons_arguments_web_elements)):
+            for i in range(0, len(lessons_arguments_web_elements)):
                 j = int(lessons_arguments_web_elements[i].find_element_by_xpath('..').get_attribute("id").replace("argEspansi", ""))
                 if course.end_download == j:
-                    end = i
-                    break
+                    end = i+1
 
             prev_j = int(lessons_arguments_web_elements[0].find_element_by_xpath('..').get_attribute("id").replace("argEspansi", ""))
             for i in range(0, end):
